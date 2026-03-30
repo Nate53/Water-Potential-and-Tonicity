@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Potential Interactive Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; }
+        canvas { background-color: #ffffff; border-radius: 0.5rem; border: 1px solid #e2e8f0; }
+        .tab-btn { transition: all 0.2s; }
+        .tab-btn.active { border-bottom: 3px solid #4f46e5; color: #4f46e5; font-weight: 700; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .var-term { font-family: 'Courier New', monospace; font-weight: 700; padding: 1px 5px; border-radius: 4px; }
+        .psi-bar-track { position: relative; height: 28px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
+        .psi-bar-center { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #94a3b8; z-index: 2; }
+        .psi-bar-fill { position: absolute; top: 3px; bottom: 3px; border-radius: 4px; transition: all 0.3s; }
+        .step-card { border-left: 4px solid #e2e8f0; transition: border-color 0.3s; }
+        .step-card.correct { border-left-color: #22c55e; }
+        .step-card.incorrect { border-left-color: #ef4444; }
+        .step-card.active-step { border-left-color: #6366f1; }
+        .badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 9999px; font-weight: 600; vertical-align: middle; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse-arrow { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        .info-callout { background: linear-gradient(135deg, #eff6ff, #f0f9ff); border: 1px solid #bfdbfe; }
+        /* Glossary terms */
+        .gloss {
+            color: #4338ca; border-bottom: 1.5px dashed #a5b4fc; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .gloss:hover { background: #e0e7ff; border-radius: 2px; }
+        /* Glossary popup */
+        #glossPopup {
+            position: fixed; z-index: 999; max-width: 340px; padding: 14px 16px;
+            background: #ffffff; border: 1px solid #c7d2fe; border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: none;
+            font-size: 0.875rem; line-height: 1.5; color: #374151;
+        }
+        #glossPopup .gloss-title {
+            font-weight: 700; color: #4338ca; margin-bottom: 4px; font-size: 0.95rem;
+        }
+        #glossPopup .gloss-close {
+            position: absolute; top: 6px; right: 10px; cursor: pointer;
+            color: #9ca3af; font-size: 1.1rem; line-height: 1;
+        }
+        #glossPopup .gloss-close:hover { color: #4b5563; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+<div class="container mx-auto p-4 md:p-6 max-w-7xl">
+    <!-- ========== LANDING PAGE ========== -->
+    <div id="landingPage">
+        <!-- Hero section with photo -->
+        <div class="relative rounded-xl overflow-hidden shadow-xl mb-0">
+            <img src="agalta.jpg.png" alt="Cloud forest, Sierra de Agalta, Honduras" class="w-full h-64 md:h-96 object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+            <div class="absolute bottom-0 left-0 right-0 p-6 md:p-10">
+                <h1 class="text-3xl md:text-5xl font-extrabold text-white drop-shadow-lg">Water Potential (&#936;) Interactive Lab</h1>
+                <p class="mt-2 text-lg md:text-xl text-gray-200">AP/IB Biology &mdash; Tonicity, Osmoregulation &amp; Water Potential</p>
+            </div>
+        </div>
+
+        <!-- Introduction text -->
+        <div class="bg-white rounded-b-xl shadow-lg p-6 md:p-8 mb-6">
+            <div class="max-w-4xl mx-auto space-y-4 text-gray-700 leading-relaxed">
+                <p class="text-lg">
+                    Water is life's solvent. Every chemical reaction in your body, every nutrient absorbed by a plant's roots, every signal sent between your neurons &mdash; all of it depends on the behavior of water. Understanding <em>how</em> and <em>why</em> water moves is understanding one of biology's most fundamental stories.
+                </p>
+                <p>
+                    Think about your own body: why do doctors insist you stay hydrated? What happens when you drink <em>too much</em> water &mdash; a dangerous condition called <span class="gloss" data-term="water intoxication"><strong>water intoxication</strong></span> &mdash; and your cells begin to swell? Why does an IV bag need to be carefully formulated so it doesn't destroy your red blood cells? The answer is <span class="gloss"><strong>tonicity</strong></span> and <span class="gloss"><strong>water potential</strong></span>.
+                </p>
+                <p>
+                    Now think about plants. During a drought, why do leaves wilt and crops fail? Why can salt water kill a garden? And at the largest scale, why are the shifting rainfall patterns and rising temperatures caused by climate change so threatening to ecosystems worldwide? It all comes back to <span class="gloss"><strong>osmosis</strong></span> &mdash; water's movement across membranes &mdash; and the maintenance of <span class="gloss"><strong>homeostasis</strong></span>. You might say the answer is, quite literally, at the <em>root</em> of it all.
+                </p>
+                <p class="text-base font-medium text-indigo-800 bg-indigo-50 p-3 rounded-lg">
+                    In this lab, you will explore the physics and biology behind water movement: what drives it, how cells respond, and why it matters &mdash; from a single cell to an entire organism.
+                </p>
+
+                <div class="text-center pt-4">
+                    <button id="enterLabBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-3 px-10 rounded-xl shadow-md hover:shadow-lg transition-all transform hover:scale-105">
+                        Enter the Lab &rarr;
+                    </button>
+                </div>
+            </div>
+            <p class="text-center text-xs text-gray-400 mt-5">Photo: Cloud forest, Sierra de Agalta, Honduras</p>
+        </div>
+    </div>
+
+    <!-- ========== LAB CONTENT (hidden until Enter) ========== -->
+    <div id="labContent" class="hidden">
+
+    <!-- Header (compact, inside lab) -->
+    <header class="text-center mb-4">
+        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900">Water Potential (&#936;) Interactive Lab</h1>
+        <button id="backToIntroBtn" class="text-sm text-indigo-600 hover:text-indigo-800 mt-1">&larr; Back to Introduction</button>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="flex border-b border-gray-200 mb-6 overflow-x-auto" id="tabNav">
+        <button class="tab-btn active px-4 py-3 text-sm md:text-base whitespace-nowrap" data-tab="tonicity">&#128300; Tonicity Simulator</button>
+        <button class="tab-btn px-4 py-3 text-sm md:text-base whitespace-nowrap" data-tab="calculator">&#128290; &#936; Calculator</button>
+        <button class="tab-btn px-4 py-3 text-sm md:text-base whitespace-nowrap" data-tab="practice">&#9999;&#65039; Practice Problems</button>
+        <button class="tab-btn px-4 py-3 text-sm md:text-base whitespace-nowrap" data-tab="transport">&#127795; Water Transport</button>
+    </nav>
+
+    <!-- ========== TAB 1: TONICITY SIMULATOR ========== -->
+    <div class="tab-panel active" id="panel-tonicity">
+        <div class="bg-white rounded-xl shadow-lg p-5 md:p-7">
+            <div class="info-callout p-3 rounded-lg mb-5 text-sm text-blue-800">
+                <strong>Key Concept:</strong> Water moves by <span class="gloss">osmosis</span> from regions of high <span class="gloss">water potential</span> (&#936;) to regions of low <span class="gloss">water potential</span>. The solution surrounding a cell can be <span class="gloss">hypotonic</span>, <span class="gloss">isotonic</span>, or <span class="gloss">hypertonic</span> relative to the cell's contents.
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Canvas -->
+                <div class="w-full lg:w-3/5">
+                    <canvas id="tonicityCanvas" class="w-full" style="height:420px;"></canvas>
+                </div>
+
+                <!-- Controls -->
+                <div class="w-full lg:w-2/5 space-y-4">
+                    <!-- Cell Type Toggle -->
+                    <div class="flex rounded-lg overflow-hidden border border-gray-300">
+                        <button id="btnPlant" class="flex-1 py-2 text-sm font-semibold bg-green-600 text-white transition-all" onclick="setCellType('plant')">&#127793; Plant Cell</button>
+                        <button id="btnAnimal" class="flex-1 py-2 text-sm font-semibold bg-gray-100 text-gray-600 transition-all" onclick="setCellType('animal')">&#129528; Animal Cell</button>
+                        <button id="btnCompare" class="flex-1 py-2 text-sm font-semibold bg-gray-100 text-gray-600 transition-all" onclick="setCellType('compare')">&#8596; Compare</button>
+                    </div>
+
+                    <!-- Solution Controls -->
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h3 class="font-bold text-blue-800 mb-2">Beaker Solution</h3>
+                        <div class="flex items-center gap-3 mb-1">
+                            <label class="text-sm w-28">Solute Concentration:</label>
+                            <input type="range" id="extConc" min="0" max="1.0" step="0.01" value="0.2" class="flex-1">
+                            <span id="extConcVal" class="text-sm font-bold text-blue-700 w-16 text-right">0.20 M</span>
+                        </div>
+                        <div class="text-center text-sm font-medium mt-1">Beaker &#936; = <span id="extPsiDisplay" class="font-bold text-blue-700">-4.95 bars</span></div>
+                    </div>
+
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <h3 class="font-bold text-green-800 mb-2">Cell Cytoplasm</h3>
+                        <div class="flex items-center gap-3 mb-1">
+                            <label class="text-sm w-28">Solute Concentration:</label>
+                            <input type="range" id="intConc" min="0" max="1.0" step="0.01" value="0.4" class="flex-1">
+                            <span id="intConcVal" class="text-sm font-bold text-green-700 w-16 text-right">0.40 M</span>
+                        </div>
+                        <div class="text-center text-sm font-medium mt-1">Cell &#936;<sub>s</sub> = <span id="intPsiDisplay" class="font-bold text-green-700">-9.91 bars</span></div>
+                    </div>
+
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <div class="flex items-center gap-3 mb-2">
+                            <label class="text-sm w-28">Solute:</label>
+                            <select id="soluteType" class="flex-1 p-1.5 border rounded text-sm">
+                                <option value="1">Sucrose (i = 1)</option>
+                                <option value="2">NaCl (i = 2)</option>
+                                <option value="3">CaCl&#8322; (i = 3)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="text-sm w-28">Temperature:</label>
+                            <input type="range" id="simTemp" min="5" max="45" step="1" value="25" class="flex-1">
+                            <span id="simTempVal" class="text-sm font-bold w-16 text-right">25 &#176;C</span>
+                        </div>
+                    </div>
+
+                    <!-- Result Banner -->
+                    <div id="tonicityBanner" class="text-center font-bold text-lg p-3 rounded-lg bg-indigo-100 text-indigo-800 transition-all">
+                        Loading...
+                    </div>
+
+                    <!-- Dynamic Description -->
+                    <div id="tonicityDescription" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200 min-h-[60px]"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TAB 2: WATER POTENTIAL CALCULATOR ========== -->
+    <div class="tab-panel" id="panel-calculator">
+        <div class="bg-white rounded-xl shadow-lg p-5 md:p-7">
+            <div class="info-callout p-3 rounded-lg mb-5 text-sm text-blue-800">
+                <strong><span class="gloss">Water potential</span> (&#936;)</strong> is the sum of two components: <strong>&#936; = &#936;<sub>p</sub> + &#936;<sub>s</sub></strong>. <span class="gloss" data-term="solute potential">Solute potential</span> is always negative or zero, and is calculated using <strong>&#936;<sub>s</sub> = &minus;iCRT</strong>. <span class="gloss" data-term="pressure potential">Pressure potential</span> is typically zero or positive.
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Left: Equation Builder -->
+                <div class="space-y-5">
+                    <h3 class="text-xl font-bold text-center">Solute Potential: &#936;<sub>s</sub> = &minus;iCRT</h3>
+
+                    <!-- i slider -->
+                    <div class="bg-rose-50 p-4 rounded-lg border border-rose-200">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-semibold text-rose-800"><span class="var-term bg-rose-100 text-rose-700">i</span> Ionization Constant</span>
+                            <span id="calcIVal" class="font-bold text-rose-700">1</span>
+                        </div>
+                        <input type="range" id="calcI" min="1" max="3" step="1" value="1" class="w-full">
+                        <p class="text-xs text-gray-500 mt-1">Number of particles the solute splits into. Sucrose = 1, NaCl = 2, CaCl&#8322; = 3</p>
+                    </div>
+
+                    <!-- C slider -->
+                    <div class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-semibold text-amber-800"><span class="var-term bg-amber-100 text-amber-700">C</span> Molar Concentration</span>
+                            <span id="calcCVal" class="font-bold text-amber-700">0.30 M</span>
+                        </div>
+                        <input type="range" id="calcC" min="0" max="1.5" step="0.01" value="0.30" class="w-full">
+                        <p class="text-xs text-gray-500 mt-1">Moles of solute per liter of solution</p>
+                    </div>
+
+                    <!-- R constant -->
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <span class="font-semibold text-gray-700"><span class="var-term bg-gray-200 text-gray-700">R</span> Pressure Constant</span>
+                            <span class="font-bold text-gray-700">0.0831 L&middot;bar / mol&middot;K</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">This is a universal constant &mdash; it never changes</p>
+                    </div>
+
+                    <!-- T slider -->
+                    <div class="bg-sky-50 p-4 rounded-lg border border-sky-200">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-semibold text-sky-800"><span class="var-term bg-sky-100 text-sky-700">T</span> Temperature</span>
+                            <span id="calcTVal" class="font-bold text-sky-700">25 &#176;C = 298 K</span>
+                        </div>
+                        <input type="range" id="calcT" min="0" max="50" step="1" value="25" class="w-full">
+                        <p class="text-xs text-gray-500 mt-1">Temperature in Kelvin. K = &#176;C + 273</p>
+                    </div>
+                </div>
+
+                <!-- Right: Result & Visualization -->
+                <div class="space-y-5">
+                    <!-- Calculation Steps -->
+                    <div class="bg-indigo-50 p-5 rounded-lg border border-indigo-200">
+                        <h3 class="font-bold text-indigo-800 mb-3">Step-by-Step Calculation</h3>
+                        <div id="calcSteps" class="font-mono text-sm space-y-2 text-gray-700"></div>
+                        <div class="mt-4 text-center">
+                            <div class="text-sm text-gray-500">Solute Potential</div>
+                            <div id="calcResult" class="text-3xl font-extrabold text-indigo-700"></div>
+                        </div>
+                    </div>
+
+                    <!-- Total Water Potential -->
+                    <div class="bg-purple-50 p-5 rounded-lg border border-purple-200">
+                        <h3 class="font-bold text-purple-800 mb-3">Total Water Potential: &#936; = &#936;<sub>p</sub> + &#936;<sub>s</sub></h3>
+                        <div class="flex items-center gap-3 mb-3">
+                            <label class="text-sm w-40 font-medium">Pressure Potential (&#936;<sub>p</sub>):</label>
+                            <input type="range" id="calcPp" min="0" max="10" step="0.1" value="0" class="flex-1">
+                            <span id="calcPpVal" class="font-bold text-purple-700 w-20 text-right">0.00 bars</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-4">&#936;<sub>p</sub> is usually 0 for open systems and animal cells. For plant cells with turgor, it is positive.</p>
+
+                        <!-- Bar visualization -->
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold w-8 text-right">&#936;<sub>s</sub></span>
+                                <div class="psi-bar-track flex-1">
+                                    <div class="psi-bar-center"></div>
+                                    <div id="barPsiS" class="psi-bar-fill bg-red-400"></div>
+                                </div>
+                                <span id="barPsiSLabel" class="text-xs font-bold w-20 text-right text-red-600"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold w-8 text-right">&#936;<sub>p</sub></span>
+                                <div class="psi-bar-track flex-1">
+                                    <div class="psi-bar-center"></div>
+                                    <div id="barPsiP" class="psi-bar-fill bg-blue-400"></div>
+                                </div>
+                                <span id="barPsiPLabel" class="text-xs font-bold w-20 text-right text-blue-600"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold w-8 text-right">&#936;</span>
+                                <div class="psi-bar-track flex-1">
+                                    <div class="psi-bar-center"></div>
+                                    <div id="barPsiTotal" class="psi-bar-fill bg-purple-500"></div>
+                                </div>
+                                <span id="barPsiTotalLabel" class="text-xs font-bold w-20 text-right text-purple-700"></span>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3 text-xs text-gray-400">&#8592; more negative &nbsp;|&nbsp; 0 &nbsp;|&nbsp; more positive &#8594;</div>
+                    </div>
+
+                    <!-- Key concept box -->
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-sm">
+                        <strong class="text-yellow-800">Remember:</strong> Adding solutes <em>always</em> makes <span class="gloss" data-term="solute potential">Ψ<sub>s</sub></span> more negative. Pure water has Ψ<sub>s</sub> = 0. Water always flows by <span class="gloss">osmosis</span> from <strong>higher Ψ</strong> to <strong>lower Ψ</strong>.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TAB 3: PRACTICE PROBLEMS ========== -->
+    <div class="tab-panel" id="panel-practice">
+        <div class="bg-white rounded-xl shadow-lg p-5 md:p-7">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-xl font-bold">Interactive Practice</h2>
+                <div id="scoreDisplay" class="text-sm font-semibold bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">Score: 0 / 0</div>
+            </div>
+
+            <!-- Problem display -->
+            <div id="problemArea" class="space-y-4">
+                <div id="problemStatement" class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-800 font-medium"></div>
+
+                <!-- Step 1: Calculate beaker Ψs -->
+                <div id="step1" class="step-card active-step bg-white p-4 rounded-lg pl-5">
+                    <p class="font-semibold text-sm mb-2">Step 1: Calculate the solute potential of the <span class="text-blue-600">beaker</span> (&#936;<sub>s</sub> = &minus;iCRT)</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm">&#936;<sub>s</sub> = </span>
+                        <input type="number" id="ans1" step="0.01" class="border rounded px-2 py-1 w-28 text-sm" placeholder="e.g. -7.43">
+                        <span class="text-sm">bars</span>
+                        <button onclick="checkStep(1)" class="bg-indigo-600 text-white text-sm px-3 py-1 rounded hover:bg-indigo-700">Check</button>
+                    </div>
+                    <div id="fb1" class="text-sm mt-2 hidden"></div>
+                </div>
+
+                <!-- Step 2: Calculate cell Ψs -->
+                <div id="step2" class="step-card bg-white p-4 rounded-lg pl-5 opacity-50 pointer-events-none">
+                    <p class="font-semibold text-sm mb-2">Step 2: Calculate the solute potential of the <span class="text-green-600">cell</span></p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm">&#936;<sub>s</sub> = </span>
+                        <input type="number" id="ans2" step="0.01" class="border rounded px-2 py-1 w-28 text-sm" placeholder="e.g. -14.87">
+                        <span class="text-sm">bars</span>
+                        <button onclick="checkStep(2)" class="bg-indigo-600 text-white text-sm px-3 py-1 rounded hover:bg-indigo-700">Check</button>
+                    </div>
+                    <div id="fb2" class="text-sm mt-2 hidden"></div>
+                </div>
+
+                <!-- Step 3: Water direction -->
+                <div id="step3" class="step-card bg-white p-4 rounded-lg pl-5 opacity-50 pointer-events-none">
+                    <p class="font-semibold text-sm mb-2">Step 3: In which direction will water flow?</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="checkStep(3,'into')" class="dir-btn border rounded px-3 py-1.5 text-sm hover:bg-indigo-50">Into the cell</button>
+                        <button onclick="checkStep(3,'outof')" class="dir-btn border rounded px-3 py-1.5 text-sm hover:bg-indigo-50">Out of the cell</button>
+                        <button onclick="checkStep(3,'none')" class="dir-btn border rounded px-3 py-1.5 text-sm hover:bg-indigo-50">No net movement</button>
+                    </div>
+                    <div id="fb3" class="text-sm mt-2 hidden"></div>
+                </div>
+
+                <!-- Step 4: Tonicity -->
+                <div id="step4" class="step-card bg-white p-4 rounded-lg pl-5 opacity-50 pointer-events-none">
+                    <p class="font-semibold text-sm mb-2">Step 4: The beaker solution is _____ relative to the cell.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="checkStep(4,'hypotonic')" class="ton-btn border rounded px-3 py-1.5 text-sm hover:bg-indigo-50">Hypotonic</button>
+                        <button onclick="checkStep(4,'isotonic')" class="ton-btn border rounded px-3 py-1.5 text-sm hover:bg-indigo-50">Isotonic</button>
+                        <button onclick="checkStep(4,'hypertonic')" class="ton-btn border rounded px-3 py-1.5 text-sm hover:bg-indigo-50">Hypertonic</button>
+                    </div>
+                    <div id="fb4" class="text-sm mt-2 hidden"></div>
+                </div>
+
+                <!-- Step 5: Cell outcome -->
+                <div id="step5" class="step-card bg-white p-4 rounded-lg pl-5 opacity-50 pointer-events-none">
+                    <p class="font-semibold text-sm mb-2" id="step5prompt">Step 5: What happens to the cell?</p>
+                    <div id="step5options" class="flex flex-wrap gap-2"></div>
+                    <div id="fb5" class="text-sm mt-2 hidden"></div>
+                </div>
+            </div>
+
+            <div class="text-center mt-6">
+                <button id="newProblemBtn" onclick="generateProblem()" class="bg-indigo-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-indigo-700 transition-colors">Generate New Problem</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TAB 4: WATER TRANSPORT ========== -->
+    <div class="tab-panel" id="panel-transport">
+        <div class="bg-white rounded-xl shadow-lg p-5 md:p-7">
+            <div class="info-callout p-3 rounded-lg mb-5 text-sm text-blue-800">
+                <strong>Cohesion-Tension Theory:</strong> Water moves up a tree through the xylem via tension created by <span class="gloss">transpiration</span> at the leaves. This creates a <span class="gloss">water potential</span> gradient from roots (higher &#936;) to leaves (lower &#936;) to atmosphere (most negative &#936;).
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-6 items-start">
+                <div class="w-full lg:w-1/2" style="height:440px;">
+                    <canvas id="treeCanvas" class="w-full h-full"></canvas>
+                </div>
+
+                <div class="w-full lg:w-1/2 space-y-4">
+                    <div class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                        <h3 class="font-bold text-amber-800 mb-3">Soil &amp; Atmosphere</h3>
+                        <div class="flex items-center gap-3 mb-3">
+                            <label class="text-sm w-32">Soil Moisture:</label>
+                            <input type="range" id="soilWater" min="-2.0" max="-0.1" step="0.05" value="-0.3" class="flex-1">
+                            <span id="soilWaterVal" class="font-bold text-sm w-20 text-right">-0.30 bars</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="text-sm w-32">Transpiration Rate:</label>
+                            <input type="range" id="transpiration" min="1" max="10" step="1" value="5" class="flex-1">
+                            <span id="transpirationVal" class="font-bold text-sm w-20 text-right">Medium</span>
+                        </div>
+                    </div>
+
+                    <!-- Gradient display -->
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-center text-sm text-gray-500">Water Potential Gradient (&#936;)</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs w-20 text-right font-semibold text-red-700">Atmosphere</span>
+                            <div class="flex-1 h-7 bg-red-100 rounded relative overflow-hidden">
+                                <div id="gradAtm" class="absolute left-0 top-0 bottom-0 bg-red-500 rounded transition-all" style="width:95%"></div>
+                            </div>
+                            <span id="atmPsiVal" class="text-xs font-bold w-20 text-red-700">-95 bars</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs w-20 text-right font-semibold text-orange-700">Leaf</span>
+                            <div class="flex-1 h-7 bg-orange-100 rounded relative overflow-hidden">
+                                <div id="gradLeaf" class="absolute left-0 top-0 bottom-0 bg-orange-500 rounded transition-all" style="width:15%"></div>
+                            </div>
+                            <span id="leafPsiVal" class="text-xs font-bold w-20 text-orange-700">-15 bars</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs w-20 text-right font-semibold text-cyan-700">Xylem</span>
+                            <div class="flex-1 h-7 bg-cyan-100 rounded relative overflow-hidden">
+                                <div id="gradXylem" class="absolute left-0 top-0 bottom-0 bg-cyan-500 rounded transition-all" style="width:8%"></div>
+                            </div>
+                            <span id="xylemPsiVal" class="text-xs font-bold w-20 text-cyan-700">-8 bars</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs w-20 text-right font-semibold text-green-700">Root</span>
+                            <div class="flex-1 h-7 bg-green-100 rounded relative overflow-hidden">
+                                <div id="gradRoot" class="absolute left-0 top-0 bottom-0 bg-green-500 rounded transition-all" style="width:3%"></div>
+                            </div>
+                            <span id="rootPsiVal" class="text-xs font-bold w-20 text-green-700">-3 bars</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs w-20 text-right font-semibold text-emerald-700">Soil</span>
+                            <div class="flex-1 h-7 bg-emerald-100 rounded relative overflow-hidden">
+                                <div id="gradSoil" class="absolute left-0 top-0 bottom-0 bg-emerald-500 rounded transition-all" style="width:1%"></div>
+                            </div>
+                            <span id="soilPsiVal" class="text-xs font-bold w-20 text-emerald-700">-0.3 bars</span>
+                        </div>
+                        <p class="text-xs text-center text-gray-400 mt-1">Bar length = magnitude of &#936; (more negative = longer bar). Water flows from short bars &#8594; long bars.</p>
+                    </div>
+
+                    <div id="transportDescription" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-8 text-center text-xs text-gray-400 pb-4 space-y-1">
+        <p><strong>AP Biology</strong> &mdash; Big Idea 2: Energetics &bull; Topic 2.7: Tonicity and Osmoregulation &bull; LO 2.7.A, LO 2.7.B</p>
+        <p><strong>IB Biology</strong> &mdash; Theme B: Form and Function (Cells level) &bull; Theme C: Interaction and Interdependence (Organisms level)</p>
+    </footer>
+
+    </div><!-- /labContent -->
+</div>
+
+<!-- Glossary popup (shared, repositioned on click) -->
+<div id="glossPopup"><span class="gloss-close" id="glossClose">&times;</span><div class="gloss-title" id="glossTitle"></div><div id="glossBody"></div></div>
+
+<script>
+// =============================================
+// GLOSSARY SYSTEM
+// =============================================
+const glossary = {
+    'water potential': {
+        title: 'Water Potential (\u03A8)',
+        def: 'A measure of the free energy of water in a system. Water always moves from regions of <strong>higher</strong> \u03A8 to regions of <strong>lower</strong> \u03A8. It is the sum of solute potential and pressure potential: <strong>\u03A8 = \u03A8<sub>s</sub> + \u03A8<sub>p</sub></strong>. Pure water in an open container has \u03A8 = 0.'
+    },
+    'solute potential': {
+        title: 'Solute Potential (\u03A8s)',
+        def: 'The component of water potential due to dissolved solutes. Adding solutes <strong>lowers</strong> water potential, so \u03A8<sub>s</sub> is always negative or zero. Calculated using <strong>\u03A8<sub>s</sub> = \u2212iCRT</strong>. The more solute dissolved, the more negative the value.'
+    },
+    'pressure potential': {
+        title: 'Pressure Potential (\u03A8p)',
+        def: 'The component of water potential due to physical pressure. In plant cells, turgor pressure pushes the membrane against the cell wall, making \u03A8<sub>p</sub> positive. In an open beaker or an animal cell, \u03A8<sub>p</sub> = 0.'
+    },
+    'turgor pressure': {
+        title: 'Turgor Pressure',
+        def: 'The internal pressure exerted by water pushing the cell membrane against the rigid cell wall in plant cells. Turgor keeps plants upright and firm. When a plant wilts, it has lost turgor pressure. Turgor is the physical basis of <strong>pressure potential (\u03A8<sub>p</sub>)</strong>.'
+    },
+    'tonicity': {
+        title: 'Tonicity',
+        def: 'A comparison of solute concentration between two solutions separated by a semipermeable membrane. Tonicity determines the direction and extent of osmotic water movement. The three states are <strong>hypotonic</strong>, <strong>isotonic</strong>, and <strong>hypertonic</strong>.'
+    },
+    'hypotonic': {
+        title: 'Hypotonic',
+        def: 'A solution that has a <strong>lower</strong> solute concentration (higher \u03A8) than the cell it surrounds. Water moves <strong>into</strong> the cell. Plant cells become <em>turgid</em>; animal cells swell and may <em>lyse</em> (burst).'
+    },
+    'isotonic': {
+        title: 'Isotonic',
+        def: 'A solution that has the <strong>same</strong> solute concentration as the cell it surrounds. There is <strong>no net water movement</strong>. Plant cells are <em>flaccid</em>; animal cells maintain their normal shape. This is the ideal state for animal cells.'
+    },
+    'hypertonic': {
+        title: 'Hypertonic',
+        def: 'A solution that has a <strong>higher</strong> solute concentration (lower \u03A8) than the cell it surrounds. Water moves <strong>out of</strong> the cell. Plant cells undergo <em>plasmolysis</em>; animal cells undergo <em>crenation</em> (shrivel).'
+    },
+    'osmosis': {
+        title: 'Osmosis',
+        def: 'The net movement of water across a selectively permeable membrane from a region of <strong>higher water potential</strong> to a region of <strong>lower water potential</strong>. It is a passive process \u2014 no energy (ATP) is required.'
+    },
+    'plasmolysis': {
+        title: 'Plasmolysis',
+        def: 'The shrinking of a plant cell\'s cytoplasm and the pulling away of the cell membrane from the rigid cell wall. This occurs when the cell is placed in a <strong>hypertonic</strong> solution and loses water by osmosis. The cell wall remains intact, but the cell loses turgor and the plant wilts.'
+    },
+    'turgid': {
+        title: 'Turgid',
+        def: 'A plant cell that is swollen and firm because water has entered by osmosis and the cell membrane presses against the cell wall. Turgor pressure (\u03A8<sub>p</sub>) is high. This is the <strong>healthy, ideal state</strong> for plant cells and keeps the plant upright.'
+    },
+    'flaccid': {
+        title: 'Flaccid',
+        def: 'A plant cell that is limp and soft because there is <strong>no net water movement</strong> (isotonic conditions). Turgor pressure is near zero. The membrane is not pressed firmly against the wall, but has not pulled away from it either.'
+    },
+    'lysis': {
+        title: 'Lysis (Cytolysis)',
+        def: 'The bursting of an animal cell due to excessive water intake in a <strong>hypotonic</strong> solution. Without a rigid cell wall, the cell membrane cannot withstand the increasing internal pressure and ruptures. This is why animal cells require osmoregulation.'
+    },
+    'crenation': {
+        title: 'Crenation',
+        def: 'The shriveling and development of a wrinkled, spiky surface in animal cells placed in a <strong>hypertonic</strong> solution. Water leaves the cell by osmosis, causing the cytoplasm and membrane to shrink.'
+    },
+    'osmoregulation': {
+        title: 'Osmoregulation',
+        def: 'The active regulation of osmotic pressure in an organism\'s body fluids to maintain <strong>homeostasis</strong> of water content. Examples include the contractile vacuole in protists (pumping out excess water) and the kidneys in mammals (controlling water and solute excretion).'
+    },
+    'water intoxication': {
+        title: 'Water Intoxication (Hyponatremia)',
+        def: 'A potentially dangerous condition caused by drinking excessive water, which dilutes the blood\'s solute concentration. The blood plasma becomes <strong>hypotonic</strong> relative to body cells, causing cells \u2014 especially in the brain \u2014 to swell. This can lead to confusion, seizures, and in severe cases, death.'
+    },
+    'transpiration': {
+        title: 'Transpiration',
+        def: 'The evaporation of water from the surfaces of mesophyll cells inside leaves, through stomata, and into the atmosphere. Transpiration creates a powerful <strong>negative water potential</strong> at the leaf surface, which pulls water upward through the xylem via cohesion-tension.'
+    },
+    'homeostasis': {
+        title: 'Homeostasis',
+        def: 'The maintenance of a stable internal environment despite changes in external conditions. Water balance is a critical component of homeostasis \u2014 cells must regulate their internal solute concentrations to prevent excessive swelling or shrinking.'
+    }
+};
+
+// Build popup behavior
+const glossPopup = document.getElementById('glossPopup');
+const glossTitle = document.getElementById('glossTitle');
+const glossBody = document.getElementById('glossBody');
+const glossClose = document.getElementById('glossClose');
+
+function showGlossary(term, targetEl) {
+    const entry = glossary[term.toLowerCase()];
+    if (!entry) return;
+
+    glossTitle.textContent = entry.title;
+    glossBody.innerHTML = entry.def;
+    glossPopup.style.display = 'block';
+
+    // Position near the clicked word
+    const rect = targetEl.getBoundingClientRect();
+    let top = rect.bottom + 8 + window.scrollY;
+    let left = rect.left + window.scrollX;
+
+    // Keep popup on screen
+    const popupRect = glossPopup.getBoundingClientRect();
+    if (left + 340 > window.innerWidth) left = window.innerWidth - 355;
+    if (left < 10) left = 10;
+    // If it would go off the bottom, show above instead
+    if (rect.bottom + 180 > window.innerHeight) {
+        top = rect.top - 8 + window.scrollY - 160;
+    }
+
+    glossPopup.style.position = 'absolute';
+    glossPopup.style.top = top + 'px';
+    glossPopup.style.left = left + 'px';
+}
+
+glossClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    glossPopup.style.display = 'none';
+});
+
+// Single click handler: find glossary terms using closest(), then dismiss if clicking elsewhere
+document.addEventListener('click', (e) => {
+    // Check if click is on or inside a .gloss element
+    const glossEl = e.target.closest('.gloss');
+    if (glossEl) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Use data-term if set, otherwise use the visible text content
+        const term = glossEl.dataset.term || glossEl.textContent.trim();
+        showGlossary(term, glossEl);
+        return;
+    }
+    // If click is inside the popup itself, do nothing
+    if (glossPopup.contains(e.target)) return;
+    // Otherwise dismiss the popup
+    glossPopup.style.display = 'none';
+});
+// =============================================
+// LANDING PAGE
+// =============================================
+document.getElementById('enterLabBtn').addEventListener('click', () => {
+    document.getElementById('landingPage').classList.add('hidden');
+    document.getElementById('labContent').classList.remove('hidden');
+    window.scrollTo(0, 0);
+});
+document.getElementById('backToIntroBtn').addEventListener('click', () => {
+    document.getElementById('labContent').classList.add('hidden');
+    document.getElementById('landingPage').classList.remove('hidden');
+    window.scrollTo(0, 0);
+});
+
+// =============================================
+// CONSTANTS
+// =============================================
+const R = 0.0831; // Pressure constant (L·bar/mol·K)
+const psiS = (i, C, T) => -i * C * R * (T + 273); // solute potential from Celsius
+
+// =============================================
+// TAB MANAGEMENT
+// =============================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+});
+
+// =============================================
+// TAB 1: TONICITY SIMULATOR
+// =============================================
+const tCanvas = document.getElementById('tonicityCanvas');
+const tCtx = tCanvas.getContext('2d');
+
+const sim = {
+    cellType: 'plant', // 'plant', 'animal', 'compare'
+    plantTurgidity: 1.0,
+    animalTurgidity: 1.0,
+    targetPlantTurgidity: 1.0,
+    targetAnimalTurgidity: 1.0,
+    waterParticles: [],
+    beakerSolutes: [],
+    cellSolutes: [],
+    animFrame: null
+};
+
+// Initialize solute particles
+function initSoluteParticles(count, bounds) {
+    const particles = [];
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x: bounds.x + Math.random() * bounds.w,
+            y: bounds.y + Math.random() * bounds.h,
+            vx: (Math.random() - 0.5) * 0.8,
+            vy: (Math.random() - 0.5) * 0.8,
+            bounds
+        });
+    }
+    return particles;
+}
+
+function updateParticle(p) {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < p.bounds.x || p.x > p.bounds.x + p.bounds.w) p.vx *= -1;
+    if (p.y < p.bounds.y || p.y > p.bounds.y + p.bounds.h) p.vy *= -1;
+    p.x = Math.max(p.bounds.x, Math.min(p.bounds.x + p.bounds.w, p.x));
+    p.y = Math.max(p.bounds.y, Math.min(p.bounds.y + p.bounds.h, p.y));
+}
+
+function setCellType(type) {
+    sim.cellType = type;
+    document.getElementById('btnPlant').className = 'flex-1 py-2 text-sm font-semibold transition-all ' +
+        (type === 'plant' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600');
+    document.getElementById('btnAnimal').className = 'flex-1 py-2 text-sm font-semibold transition-all ' +
+        (type === 'animal' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600');
+    document.getElementById('btnCompare').className = 'flex-1 py-2 text-sm font-semibold transition-all ' +
+        (type === 'compare' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600');
+}
+
+function drawBeaker(ctx, x, y, w, h, concentration) {
+    // Beaker outline
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - 8, y + h);
+    ctx.lineTo(x + w + 8, y + h);
+    ctx.lineTo(x + w, y);
+    ctx.stroke();
+
+    // Solution fill - color intensity based on concentration
+    const alpha = 0.15 + concentration * 0.35;
+    ctx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y + 10);
+    ctx.lineTo(x - 5, y + h - 2);
+    ctx.lineTo(x + w + 5, y + h - 2);
+    ctx.lineTo(x + w - 2, y + 10);
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawPlantCell(ctx, cx, cy, wallW, wallH, turgidity) {
+    // Cell wall - fixed green rectangle
+    ctx.strokeStyle = '#166534';
+    ctx.lineWidth = 4;
+    const r = 6;
+    ctx.beginPath();
+    ctx.roundRect(cx - wallW/2, cy - wallH/2, wallW, wallH, r);
+    ctx.stroke();
+
+    // Cell membrane - scales with turgidity (clamped to wall)
+    const scale = Math.min(turgidity, 1.15);
+    const memW = wallW * scale * 0.88;
+    const memH = wallH * scale * 0.88;
+
+    // When plasmolyzed, membrane becomes more rounded/oval
+    ctx.fillStyle = 'rgba(134, 239, 172, 0.55)';
+    ctx.strokeStyle = '#15803d';
+    ctx.lineWidth = 2;
+
+    if (turgidity < 0.75) {
+        // Severely plasmolyzed - oval membrane pulled far from wall
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, memW/2, memH/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.roundRect(cx - memW/2, cy - memH/2, memW, memH, turgidity < 0.9 ? 12 : r);
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    // Central vacuole
+    const vacScale = Math.max(0.15, (turgidity - 0.4) * 0.8);
+    const vacW = memW * vacScale * 0.6;
+    const vacH = memH * vacScale * 0.6;
+    ctx.fillStyle = 'rgba(191, 219, 254, 0.5)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, vacW/2, vacH/2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // --- Labels with leader lines ---
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'left';
+
+    // Cell wall label — points to top-right corner of wall
+    const wallLabelX = cx + wallW/2 + 8;
+    const wallLabelY = cy - wallH/2 + 12;
+    ctx.strokeStyle = '#166534';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(cx + wallW/2, cy - wallH/2 + 8);
+    ctx.lineTo(wallLabelX, wallLabelY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#166534';
+    ctx.font = 'bold 10px Inter, sans-serif';
+    ctx.fillText('Cell Wall', wallLabelX + 3, wallLabelY + 3);
+
+    // Cell membrane label — points to membrane edge, slightly lower
+    const memEdgeX = cx + memW/2;
+    const memLabelX = cx + wallW/2 + 8;
+    const memLabelY = cy - wallH/2 + 32;
+    ctx.strokeStyle = '#15803d';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(memEdgeX, cy - memH/2 + 14);
+    ctx.lineTo(memLabelX, memLabelY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#15803d';
+    ctx.font = 'bold 10px Inter, sans-serif';
+    ctx.fillText('Cell Membrane', memLabelX + 3, memLabelY + 3);
+
+    // Central vacuole label (only if vacuole is visible enough)
+    if (vacScale > 0.3) {
+        ctx.fillStyle = '#1e40af';
+        ctx.font = '9px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Vacuole', cx, cy + 3);
+    }
+
+    // --- Turgor Pressure gauge ---
+    // Ψp is 0 when flaccid/plasmolyzed, positive when turgid
+    const turgorPressure = Math.max(0, (turgidity - 1.0) / 0.25); // 0 to ~1 scale
+    const gaugeX = cx - wallW/2 - 50;
+    const gaugeY = cy - wallH/2;
+    const gaugeW = 14;
+    const gaugeH = wallH;
+
+    // Gauge background
+    ctx.fillStyle = '#f1f5f9';
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(gaugeX, gaugeY, gaugeW, gaugeH, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    // Gauge fill (fills from bottom up)
+    const fillH = gaugeH * Math.min(turgorPressure, 1.0);
+    if (fillH > 1) {
+        const gradient = ctx.createLinearGradient(gaugeX, gaugeY + gaugeH, gaugeX, gaugeY + gaugeH - fillH);
+        gradient.addColorStop(0, '#22c55e');
+        gradient.addColorStop(1, '#86efac');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.roundRect(gaugeX + 2, gaugeY + gaugeH - fillH, gaugeW - 4, fillH, 3);
+        ctx.fill();
+    }
+
+    // Gauge label
+    ctx.save();
+    ctx.translate(gaugeX - 4, cy);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = '#374151';
+    ctx.font = 'bold 10px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Turgor (\u03A8p)', 0, 0);
+    ctx.restore();
+
+    // Pressure value below gauge
+    const psiP = turgorPressure > 0.01 ? (turgorPressure * 5).toFixed(1) : '0.0';
+    ctx.fillStyle = '#166534';
+    ctx.font = 'bold 10px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(psiP + ' bars', gaugeX + gaugeW/2, gaugeY + gaugeH + 14);
+
+    // Title label
+    ctx.fillStyle = '#166534';
+    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Plant Cell', cx, cy - wallH/2 - 8);
+}
+
+function drawAnimalCell(ctx, cx, cy, baseRadius, turgidity) {
+    const radius = baseRadius * Math.min(turgidity, 1.45);
+
+    if (turgidity > 1.35) {
+        // Lysed - burst
+        ctx.fillStyle = 'rgba(254, 202, 202, 0.3)';
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Burst fragments
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2 + Date.now() * 0.0003;
+            const dist = radius + 8 + Math.sin(Date.now() * 0.002 + i) * 5;
+            const fx = cx + Math.cos(angle) * dist;
+            const fy = cy + Math.sin(angle) * dist;
+            ctx.fillStyle = 'rgba(254, 202, 202, 0.6)';
+            ctx.beginPath();
+            ctx.arc(fx, fy, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.fillStyle = '#dc2626';
+        ctx.font = 'bold 12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('LYSIS!', cx, cy + 4);
+    } else if (turgidity < 0.78) {
+        // Crenated - wrinkled/spiky
+        ctx.fillStyle = 'rgba(254, 202, 202, 0.5)';
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 2;
+        const spikes = 16;
+        ctx.beginPath();
+        for (let i = 0; i <= spikes; i++) {
+            const angle = (i / spikes) * Math.PI * 2;
+            const wobble = (i % 2 === 0) ? radius : radius * 0.82;
+            const px = cx + Math.cos(angle) * wobble;
+            const py = cy + Math.sin(angle) * wobble;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    } else {
+        // Normal or slightly swollen
+        ctx.fillStyle = 'rgba(254, 202, 202, 0.5)';
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Nucleus
+        ctx.fillStyle = 'rgba(220, 38, 38, 0.2)';
+        ctx.beginPath();
+        ctx.arc(cx + radius * 0.15, cy - radius * 0.1, radius * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Label
+    ctx.fillStyle = '#dc2626';
+    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    if (turgidity <= 1.35) {
+        ctx.fillText('Animal Cell', cx, cy - baseRadius - 10);
+    }
+}
+
+function drawWaterArrows(ctx, cx, cy, netDiff, isIntoCell) {
+    if (Math.abs(netDiff) < 0.5) return;
+
+    const strength = Math.min(Math.abs(netDiff) / 15, 1);
+    const time = Date.now() * 0.003;
+    const alpha = 0.3 + strength * 0.5;
+
+    ctx.strokeStyle = `rgba(30, 64, 175, ${alpha})`;
+    ctx.fillStyle = `rgba(30, 64, 175, ${alpha})`;
+    ctx.lineWidth = 2 + strength * 2;
+
+    // Draw 3 animated arrows on each side of the cell
+    const offsets = [-30, 0, 30];
+    offsets.forEach((offset, idx) => {
+        const arrowPhase = (time + idx * 2) % 6;
+        const progress = arrowPhase / 6;
+        const arrowAlpha = Math.sin(progress * Math.PI);
+        ctx.globalAlpha = arrowAlpha * alpha;
+
+        const len = 22;
+
+        if (isIntoCell) {
+            // Water flows INWARD: arrow starts far out, tip points toward cell
+            // Right side arrow
+            const startX = cx + 85 - progress * 35;
+            ctx.beginPath();
+            ctx.moveTo(startX, cy + offset);
+            ctx.lineTo(startX - len, cy + offset);
+            ctx.stroke();
+            // Arrowhead pointing left (toward cell)
+            ctx.beginPath();
+            ctx.moveTo(startX - len, cy + offset);
+            ctx.lineTo(startX - len + 8, cy + offset - 5);
+            ctx.lineTo(startX - len + 8, cy + offset + 5);
+            ctx.closePath();
+            ctx.fill();
+
+            // Left side arrow (mirror)
+            const startXL = cx - 85 + progress * 35;
+            ctx.beginPath();
+            ctx.moveTo(startXL, cy + offset);
+            ctx.lineTo(startXL + len, cy + offset);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(startXL + len, cy + offset);
+            ctx.lineTo(startXL + len - 8, cy + offset - 5);
+            ctx.lineTo(startXL + len - 8, cy + offset + 5);
+            ctx.closePath();
+            ctx.fill();
+        } else {
+            // Water flows OUTWARD: arrow starts near cell, tip points away
+            // Right side arrow
+            const startX = cx + 35 + progress * 45;
+            ctx.beginPath();
+            ctx.moveTo(startX, cy + offset);
+            ctx.lineTo(startX + len, cy + offset);
+            ctx.stroke();
+            // Arrowhead pointing right (away from cell)
+            ctx.beginPath();
+            ctx.moveTo(startX + len, cy + offset);
+            ctx.lineTo(startX + len - 8, cy + offset - 5);
+            ctx.lineTo(startX + len - 8, cy + offset + 5);
+            ctx.closePath();
+            ctx.fill();
+
+            // Left side arrow (mirror)
+            const startXL = cx - 35 - progress * 45;
+            ctx.beginPath();
+            ctx.moveTo(startXL, cy + offset);
+            ctx.lineTo(startXL - len, cy + offset);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(startXL - len, cy + offset);
+            ctx.lineTo(startXL - len + 8, cy + offset - 5);
+            ctx.lineTo(startXL - len + 8, cy + offset + 5);
+            ctx.closePath();
+            ctx.fill();
+        }
+    });
+    ctx.globalAlpha = 1;
+
+    // "H₂O" label near arrows
+    ctx.fillStyle = 'rgba(30, 64, 175, 0.7)';
+    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    if (isIntoCell) {
+        ctx.fillText('H\u2082O \u2192', cx + 75, cy - 42);
+        ctx.fillText('\u2190 H\u2082O', cx - 75, cy - 42);
+    } else {
+        ctx.fillText('\u2192 H\u2082O', cx + 65, cy - 42);
+        ctx.fillText('H\u2082O \u2190', cx - 65, cy - 42);
+    }
+}
+
+function getTonicityInfo() {
+    const extC = parseFloat(document.getElementById('extConc').value);
+    const intC = parseFloat(document.getElementById('intConc').value);
+    const T = parseInt(document.getElementById('simTemp').value);
+    const i = parseInt(document.getElementById('soluteType').value);
+
+    const extPsi = psiS(i, extC, T);
+    const intPsiSolute = psiS(i, intC, T);
+
+    // Update displays
+    document.getElementById('extConcVal').textContent = extC.toFixed(2) + ' M';
+    document.getElementById('intConcVal').textContent = intC.toFixed(2) + ' M';
+    document.getElementById('simTempVal').textContent = T + ' °C';
+    document.getElementById('extPsiDisplay').textContent = extPsi.toFixed(2) + ' bars';
+    document.getElementById('intPsiDisplay').textContent = intPsiSolute.toFixed(2) + ' bars';
+
+    const diff = extPsi - intPsiSolute; // positive = water into cell
+    const tolerance = Math.abs(intPsiSolute) * 0.05 + 0.3;
+    let tonicity, waterDir;
+
+    if (Math.abs(diff) < tolerance) {
+        tonicity = 'isotonic';
+        waterDir = 'none';
+    } else if (diff > 0) {
+        tonicity = 'hypotonic';
+        waterDir = 'into';
+    } else {
+        tonicity = 'hypertonic';
+        waterDir = 'outof';
+    }
+
+    return { extPsi, intPsiSolute, diff, tonicity, waterDir, extC, intC };
+}
+
+let lastDescKey = ''; // Track what's displayed so we only rewrite when it changes
+
+function updateTonicityUI(info) {
+    const banner = document.getElementById('tonicityBanner');
+    const desc = document.getElementById('tonicityDescription');
+    const ct = sim.cellType;
+
+    const bannerColors = {
+        hypotonic: 'bg-green-100 text-green-800',
+        isotonic: 'bg-gray-100 text-gray-700',
+        hypertonic: 'bg-red-100 text-red-800'
+    };
+    const bannerText = {
+        hypotonic: 'HYPOTONIC — Water flows INTO the cell',
+        isotonic: 'ISOTONIC — No net water movement',
+        hypertonic: 'HYPERTONIC — Water flows OUT of the cell'
+    };
+
+    banner.className = `text-center font-bold text-lg p-3 rounded-lg transition-all ${bannerColors[info.tonicity]}`;
+    banner.textContent = bannerText[info.tonicity];
+
+    // Only rewrite description HTML when the state actually changes
+    const descKey = ct + '|' + info.tonicity;
+    if (descKey === lastDescKey) {
+        // Nothing changed — skip rewriting so glossary clicks work
+        updateTurgidityTargets(info);
+        return;
+    }
+    lastDescKey = descKey;
+
+    // Build description
+    let text = '';
+    if (ct === 'plant' || ct === 'compare') {
+        if (info.tonicity === 'hypotonic') {
+            text += '<strong>Plant cell:</strong> Water enters by <span class="gloss">osmosis</span>. The cell membrane pushes against the rigid cell wall, increasing <span class="gloss" data-term="turgor pressure">turgor pressure</span> (\u03A8<sub>p</sub>). The cell becomes <span class="gloss">turgid</span>. This is the ideal state for plant cells. ';
+        } else if (info.tonicity === 'hypertonic') {
+            text += '<strong>Plant cell:</strong> Water leaves by <span class="gloss">osmosis</span>. The cell membrane pulls away from the cell wall &mdash; this is called <span class="gloss">plasmolysis</span>. The cell loses <span class="gloss" data-term="turgor pressure">turgor pressure</span> and wilts. ';
+        } else {
+            text += '<strong>Plant cell:</strong> No net water movement. The cell is <span class="gloss">flaccid</span> &mdash; not turgid, not plasmolyzed. <span class="gloss" data-term="turgor pressure">Turgor pressure</span> is near zero. ';
+        }
+    }
+    if (ct === 'animal' || ct === 'compare') {
+        if (info.tonicity === 'hypotonic') {
+            text += '<strong>Animal cell:</strong> Water enters by <span class="gloss">osmosis</span>. Without a cell wall, the cell swells and may burst (<span class="gloss">lysis</span>). This is why animal cells need <span class="gloss">osmoregulation</span>.';
+        } else if (info.tonicity === 'hypertonic') {
+            text += '<strong>Animal cell:</strong> Water leaves by <span class="gloss">osmosis</span>. The cell shrivels and develops a wrinkled, spiky surface &mdash; this is called <span class="gloss">crenation</span>.';
+        } else {
+            text += '<strong>Animal cell:</strong> No net water movement. The cell maintains its normal shape. This is the ideal state for animal cells.';
+        }
+    }
+    desc.innerHTML = text;
+
+    updateTurgidityTargets(info);
+}
+
+function updateTurgidityTargets(info) {
+    // Target turgidity — runs every frame for smooth animation
+    const mag = Math.min(Math.abs(info.diff) / 12, 1); // 0-1 scale
+    if (info.tonicity === 'hypotonic') {
+        sim.targetPlantTurgidity = 1.0 + mag * 0.25;
+        sim.targetAnimalTurgidity = 1.0 + mag * 0.5;
+    } else if (info.tonicity === 'hypertonic') {
+        sim.targetPlantTurgidity = 1.0 - mag * 0.45;
+        sim.targetAnimalTurgidity = 1.0 - mag * 0.35;
+    } else {
+        sim.targetPlantTurgidity = 1.0;
+        sim.targetAnimalTurgidity = 1.0;
+    }
+}
+
+function drawTonicityFrame() {
+    const rect = tCanvas.parentElement.getBoundingClientRect();
+    tCanvas.width = rect.width;
+    tCanvas.height = 420;
+    const W = tCanvas.width;
+    const H = tCanvas.height;
+    tCtx.clearRect(0, 0, W, H);
+
+    const info = getTonicityInfo();
+    updateTonicityUI(info);
+
+    // Smooth turgidity
+    sim.plantTurgidity += (sim.targetPlantTurgidity - sim.plantTurgidity) * 0.03;
+    sim.animalTurgidity += (sim.targetAnimalTurgidity - sim.animalTurgidity) * 0.03;
+
+    if (sim.cellType === 'compare') {
+        // Two beakers side by side
+        const bW = (W - 30) / 2 - 20;
+        const bH = H * 0.65;
+        const bY = H * 0.12;
+
+        // Left: Plant
+        drawBeaker(tCtx, 15, bY, bW, bH, info.extC);
+        drawPlantCell(tCtx, 15 + bW/2, bY + bH/2, bW * 0.55, bH * 0.55, sim.plantTurgidity);
+        if (info.waterDir !== 'none') {
+            drawWaterArrows(tCtx, 15 + bW/2, bY + bH/2, info.diff, info.waterDir === 'into');
+        }
+
+        // Divider
+        tCtx.strokeStyle = '#cbd5e1';
+        tCtx.lineWidth = 1;
+        tCtx.setLineDash([4, 4]);
+        tCtx.beginPath();
+        tCtx.moveTo(W/2, 10);
+        tCtx.lineTo(W/2, H - 10);
+        tCtx.stroke();
+        tCtx.setLineDash([]);
+
+        // Right: Animal
+        const rX = W/2 + 15;
+        drawBeaker(tCtx, rX, bY, bW, bH, info.extC);
+        drawAnimalCell(tCtx, rX + bW/2, bY + bH/2, Math.min(bW, bH) * 0.25, sim.animalTurgidity);
+        if (info.waterDir !== 'none') {
+            drawWaterArrows(tCtx, rX + bW/2, bY + bH/2, info.diff, info.waterDir === 'into');
+        }
+    } else {
+        // Single cell
+        const bW = W * 0.7;
+        const bH = H * 0.7;
+        const bX = (W - bW) / 2;
+        const bY = H * 0.12;
+
+        drawBeaker(tCtx, bX, bY, bW, bH, info.extC);
+
+        const cx = bX + bW / 2;
+        const cy = bY + bH / 2;
+
+        if (sim.cellType === 'plant') {
+            drawPlantCell(tCtx, cx, cy, bW * 0.45, bH * 0.5, sim.plantTurgidity);
+        } else {
+            drawAnimalCell(tCtx, cx, cy, Math.min(bW, bH) * 0.22, sim.animalTurgidity);
+        }
+
+        if (info.waterDir !== 'none') {
+            drawWaterArrows(tCtx, cx, cy, info.diff, info.waterDir === 'into');
+        }
+
+        // Solute dots in beaker
+        const soluteCount = Math.floor(info.extC * 30);
+        tCtx.fillStyle = 'rgba(251, 146, 60, 0.6)';
+        for (let s = 0; s < soluteCount; s++) {
+            const hash = Math.sin(s * 127.1 + Date.now() * 0.0005) * 0.5 + 0.5;
+            const hash2 = Math.sin(s * 269.5 + Date.now() * 0.0003) * 0.5 + 0.5;
+            const sx = bX + 20 + hash * (bW - 40);
+            const sy = bY + 25 + hash2 * (bH - 35);
+            // Don't draw inside cell area
+            const distFromCenter = Math.sqrt((sx - cx) ** 2 + (sy - cy) ** 2);
+            if (distFromCenter > Math.min(bW, bH) * 0.18) {
+                tCtx.beginPath();
+                tCtx.arc(sx, sy, 3, 0, Math.PI * 2);
+                tCtx.fill();
+            }
+        }
+
+        // Solute dots inside cell
+        const cellSoluteCount = Math.floor(info.intC * 25);
+        tCtx.fillStyle = 'rgba(34, 197, 94, 0.5)';
+        for (let s = 0; s < cellSoluteCount; s++) {
+            const hash = Math.sin(s * 113.7 + Date.now() * 0.0004) * 0.5 + 0.5;
+            const hash2 = Math.sin(s * 311.3 + Date.now() * 0.0006) * 0.5 + 0.5;
+            const cellR = Math.min(bW, bH) * 0.14;
+            const angle = hash * Math.PI * 2;
+            const dist = hash2 * cellR * 0.8;
+            const sx = cx + Math.cos(angle) * dist;
+            const sy = cy + Math.sin(angle) * dist;
+            tCtx.beginPath();
+            tCtx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+            tCtx.fill();
+        }
+    }
+
+    // Solute legend
+    tCtx.font = '10px Inter, sans-serif';
+    tCtx.textAlign = 'left';
+    tCtx.fillStyle = 'rgba(251, 146, 60, 0.8)';
+    tCtx.beginPath(); tCtx.arc(12, H - 20, 3, 0, Math.PI * 2); tCtx.fill();
+    tCtx.fillStyle = '#92400e';
+    tCtx.fillText('= solute (beaker)', 20, H - 17);
+
+    tCtx.fillStyle = 'rgba(34, 197, 94, 0.7)';
+    tCtx.beginPath(); tCtx.arc(12, H - 6, 3, 0, Math.PI * 2); tCtx.fill();
+    tCtx.fillStyle = '#166534';
+    tCtx.fillText('= solute (cell)', 20, H - 3);
+
+    sim.animFrame = requestAnimationFrame(drawTonicityFrame);
+}
+
+// =============================================
+// TAB 2: WATER POTENTIAL CALCULATOR
+// =============================================
+function updateCalculator() {
+    const i = parseInt(document.getElementById('calcI').value);
+    const C = parseFloat(document.getElementById('calcC').value);
+    const T_C = parseInt(document.getElementById('calcT').value);
+    const T_K = T_C + 273;
+    const Pp = parseFloat(document.getElementById('calcPp').value);
+
+    const Ps = -i * C * R * T_K;
+    const total = Ps + Pp;
+
+    // Update value displays
+    document.getElementById('calcIVal').textContent = i;
+    document.getElementById('calcCVal').textContent = C.toFixed(2) + ' M';
+    document.getElementById('calcTVal').textContent = `${T_C} °C = ${T_K} K`;
+    document.getElementById('calcPpVal').textContent = Pp.toFixed(2) + ' bars';
+
+    // Step-by-step
+    document.getElementById('calcSteps').innerHTML =
+        `<div>\u03A8<sub>s</sub> = \u2212(i)(C)(R)(T)</div>` +
+        `<div>\u03A8<sub>s</sub> = \u2212(${i})(${C.toFixed(2)})(0.0831)(${T_K})</div>` +
+        `<div>\u03A8<sub>s</sub> = \u2212(${(i * C).toFixed(2)})(${(R * T_K).toFixed(2)})</div>` +
+        `<div class="font-bold text-indigo-700">\u03A8<sub>s</sub> = ${Ps.toFixed(2)} bars</div>`;
+
+    document.getElementById('calcResult').textContent = Ps.toFixed(2) + ' bars';
+
+    // Bar visualization
+    const maxVal = 15; // scale max
+    function setBar(id, labelId, value, isNegative) {
+        const bar = document.getElementById(id);
+        const label = document.getElementById(labelId);
+        const pct = Math.min(Math.abs(value) / maxVal, 1) * 48; // max 48% from center
+        if (value < 0) {
+            bar.style.right = '50%';
+            bar.style.left = 'auto';
+            bar.style.width = pct + '%';
+        } else {
+            bar.style.left = '50%';
+            bar.style.right = 'auto';
+            bar.style.width = pct + '%';
+        }
+        label.textContent = (value >= 0 ? '+' : '') + value.toFixed(2);
+    }
+    setBar('barPsiS', 'barPsiSLabel', Ps);
+    setBar('barPsiP', 'barPsiPLabel', Pp);
+    setBar('barPsiTotal', 'barPsiTotalLabel', total);
+}
+
+// =============================================
+// TAB 3: PRACTICE PROBLEMS
+// =============================================
+let currentProblem = null;
+let score = { correct: 0, total: 0 };
+
+const soluteOptions = [
+    { name: 'sucrose', i: 1, label: 'sucrose' },
+    { name: 'NaCl', i: 2, label: 'NaCl' },
+    { name: 'CaCl\u2082', i: 3, label: 'CaCl\u2082' }
+];
+
+const cellTypes = ['plant', 'animal'];
+
+function generateProblem() {
+    const solute = soluteOptions[Math.floor(Math.random() * soluteOptions.length)];
+    const extC = +(Math.random() * 0.8 + 0.05).toFixed(2);
+    const intC = +(Math.random() * 0.8 + 0.05).toFixed(2);
+    const tempC = Math.floor(Math.random() * 30 + 10);
+    const tempK = tempC + 273;
+    const cell = cellTypes[Math.floor(Math.random() * 2)];
+
+    const extPsiS = -(solute.i * extC * R * tempK);
+    const intPsiS = -(solute.i * intC * R * tempK);
+
+    let waterDir, tonicity;
+    const diff = extPsiS - intPsiS;
+    if (Math.abs(diff) < 0.5) {
+        waterDir = 'none'; tonicity = 'isotonic';
+    } else if (diff > 0) {
+        waterDir = 'into'; tonicity = 'hypotonic';
+    } else {
+        waterDir = 'outof'; tonicity = 'hypertonic';
+    }
+
+    // Cell outcome
+    let outcome;
+    if (cell === 'plant') {
+        if (tonicity === 'hypotonic') outcome = 'turgid';
+        else if (tonicity === 'hypertonic') outcome = 'plasmolyzed';
+        else outcome = 'flaccid';
+    } else {
+        if (tonicity === 'hypotonic') outcome = 'lysis';
+        else if (tonicity === 'hypertonic') outcome = 'crenation';
+        else outcome = 'normal';
+    }
+
+    currentProblem = { solute, extC, intC, tempC, tempK, cell, extPsiS, intPsiS, waterDir, tonicity, outcome };
+
+    // Reset UI
+    document.getElementById('problemStatement').innerHTML =
+        `A <strong>${cell} cell</strong> containing <strong>${intC.toFixed(2)} M ${solute.label}</strong> is placed in a beaker ` +
+        `of <strong>${extC.toFixed(2)} M ${solute.label}</strong> solution at <strong>${tempC}°C</strong>.` +
+        `<br><span class="text-xs text-gray-500">Given: i = ${solute.i}, R = 0.0831 L·bar/mol·K, T = ${tempC}°C + 273 = ${tempK} K</span>`;
+
+    // Reset steps
+    for (let s = 1; s <= 5; s++) {
+        const step = document.getElementById('step' + s);
+        step.classList.remove('correct', 'incorrect', 'active-step');
+        step.classList.add(s === 1 ? 'active-step' : '');
+        step.style.opacity = s === 1 ? '1' : '0.5';
+        step.style.pointerEvents = s === 1 ? 'auto' : 'none';
+        const fb = document.getElementById('fb' + s);
+        fb.classList.add('hidden');
+        fb.innerHTML = '';
+    }
+    document.getElementById('ans1').value = '';
+    document.getElementById('ans2').value = '';
+
+    // Reset direction/tonicity button styles
+    document.querySelectorAll('.dir-btn, .ton-btn').forEach(b => {
+        b.className = b.className.replace(/bg-\S+/g, '').trim() + ' border rounded px-3 py-1.5 text-sm hover:bg-indigo-50';
+    });
+
+    // Set up step 5 options based on cell type
+    const optionsDiv = document.getElementById('step5options');
+    optionsDiv.innerHTML = '';
+    let opts;
+    if (cell === 'plant') {
+        opts = [
+            { val: 'turgid', label: 'Becomes turgid (swells against wall)' },
+            { val: 'flaccid', label: 'Remains flaccid (no change)' },
+            { val: 'plasmolyzed', label: 'Becomes plasmolyzed (membrane pulls from wall)' }
+        ];
+    } else {
+        opts = [
+            { val: 'lysis', label: 'Swells and may lyse (burst)' },
+            { val: 'normal', label: 'Maintains normal shape' },
+            { val: 'crenation', label: 'Shrinks and crenates (wrinkles)' }
+        ];
+    }
+    opts.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'out-btn border rounded px-3 py-1.5 text-sm hover:bg-indigo-50';
+        btn.textContent = opt.label;
+        btn.onclick = () => checkStep(5, opt.val);
+        optionsDiv.appendChild(btn);
+    });
+    document.getElementById('step5prompt').textContent =
+        `Step 5: What happens to the ${cell} cell?`;
+}
+
+function unlockStep(n) {
+    const step = document.getElementById('step' + n);
+    step.style.opacity = '1';
+    step.style.pointerEvents = 'auto';
+    step.classList.add('active-step');
+}
+
+function checkStep(n, choice) {
+    if (!currentProblem) return;
+    const p = currentProblem;
+    const fb = document.getElementById('fb' + n);
+    const step = document.getElementById('step' + n);
+    fb.classList.remove('hidden');
+
+    let correct = false;
+
+    if (n === 1) {
+        const ans = parseFloat(document.getElementById('ans1').value);
+        const expected = p.extPsiS;
+        correct = Math.abs(ans - expected) < 0.3;
+        fb.innerHTML = correct
+            ? `<span class="text-green-700 font-semibold">Correct!</span> \u03A8<sub>s</sub> = \u2212(${p.solute.i})(${p.extC.toFixed(2)})(0.0831)(${p.tempK}) = <strong>${expected.toFixed(2)} bars</strong>`
+            : `<span class="text-red-600 font-semibold">Not quite.</span> \u03A8<sub>s</sub> = \u2212(${p.solute.i})(${p.extC.toFixed(2)})(0.0831)(${p.tempK}) = <strong>${expected.toFixed(2)} bars</strong>`;
+    } else if (n === 2) {
+        const ans = parseFloat(document.getElementById('ans2').value);
+        const expected = p.intPsiS;
+        correct = Math.abs(ans - expected) < 0.3;
+        fb.innerHTML = correct
+            ? `<span class="text-green-700 font-semibold">Correct!</span> \u03A8<sub>s</sub> = \u2212(${p.solute.i})(${p.intC.toFixed(2)})(0.0831)(${p.tempK}) = <strong>${expected.toFixed(2)} bars</strong>`
+            : `<span class="text-red-600 font-semibold">Not quite.</span> \u03A8<sub>s</sub> = \u2212(${p.solute.i})(${p.intC.toFixed(2)})(0.0831)(${p.tempK}) = <strong>${expected.toFixed(2)} bars</strong>`;
+    } else if (n === 3) {
+        correct = choice === p.waterDir;
+        const explain = {
+            into: 'Water flows <strong>into the cell</strong> because the beaker has higher \u03A8 (less negative) than the cell.',
+            outof: 'Water flows <strong>out of the cell</strong> because the beaker has lower \u03A8 (more negative) than the cell.',
+            none: 'There is <strong>no net water movement</strong> because \u03A8 values are approximately equal.'
+        };
+        fb.innerHTML = correct
+            ? `<span class="text-green-700 font-semibold">Correct!</span> ${explain[p.waterDir]}`
+            : `<span class="text-red-600 font-semibold">Not quite.</span> ${explain[p.waterDir]}`;
+        // Highlight selected button
+        document.querySelectorAll('.dir-btn').forEach(b => {
+            if (b.textContent.toLowerCase().includes(choice === 'into' ? 'into' : choice === 'outof' ? 'out' : 'no net')) {
+                b.classList.add(correct ? 'bg-green-200' : 'bg-red-200');
+            }
+        });
+    } else if (n === 4) {
+        correct = choice === p.tonicity;
+        const explain = {
+            hypotonic: 'The beaker is <strong>hypotonic</strong> — it has less solute (higher \u03A8) than the cell interior.',
+            isotonic: 'The beaker is <strong>isotonic</strong> — solute concentrations are approximately equal.',
+            hypertonic: 'The beaker is <strong>hypertonic</strong> — it has more solute (lower \u03A8) than the cell interior.'
+        };
+        fb.innerHTML = correct
+            ? `<span class="text-green-700 font-semibold">Correct!</span> ${explain[p.tonicity]}`
+            : `<span class="text-red-600 font-semibold">Not quite.</span> ${explain[p.tonicity]}`;
+        document.querySelectorAll('.ton-btn').forEach(b => {
+            if (b.textContent.toLowerCase() === choice) {
+                b.classList.add(correct ? 'bg-green-200' : 'bg-red-200');
+            }
+        });
+    } else if (n === 5) {
+        correct = choice === p.outcome;
+        const explains = {
+            turgid: `The plant cell becomes <strong>turgid</strong>. Water enters, pushing the membrane against the cell wall. Turgor pressure increases.`,
+            flaccid: `The plant cell remains <strong>flaccid</strong>. No net water movement, so turgor pressure stays near zero.`,
+            plasmolyzed: `The plant cell becomes <strong>plasmolyzed</strong>. Water leaves, and the cell membrane pulls away from the rigid cell wall.`,
+            lysis: `The animal cell swells and undergoes <strong>lysis</strong> (bursts). Without a cell wall, nothing stops the influx of water.`,
+            normal: `The animal cell maintains its <strong>normal shape</strong>. No net water movement occurs.`,
+            crenation: `The animal cell undergoes <strong>crenation</strong> — it shrivels and develops a wrinkled, spiky surface as water exits.`
+        };
+        fb.innerHTML = correct
+            ? `<span class="text-green-700 font-semibold">Correct!</span> ${explains[p.outcome]}`
+            : `<span class="text-red-600 font-semibold">Not quite.</span> ${explains[p.outcome]}`;
+        document.querySelectorAll('.out-btn').forEach(b => {
+            if (b.textContent.toLowerCase().includes(choice.substring(0, 4))) {
+                b.classList.add(correct ? 'bg-green-200' : 'bg-red-200');
+            }
+        });
+    }
+
+    // Mark step
+    step.classList.remove('active-step');
+    step.classList.add(correct ? 'correct' : 'incorrect');
+
+    // Track score
+    score.total++;
+    if (correct) score.correct++;
+    document.getElementById('scoreDisplay').textContent = `Score: ${score.correct} / ${score.total}`;
+
+    // Unlock next step
+    if (n < 5) {
+        unlockStep(n + 1);
+    }
+}
+
+// =============================================
+// TAB 4: WATER TRANSPORT IN PLANTS
+// =============================================
+const trCanvas = document.getElementById('treeCanvas');
+const trCtx = trCanvas.getContext('2d');
+const treeParticles = [];
+let treeGradientStrength = 1.0;
+
+function updateTransport() {
+    const soilPsi = parseFloat(document.getElementById('soilWater').value);
+    const transLevel = parseInt(document.getElementById('transpiration').value);
+
+    document.getElementById('soilWaterVal').textContent = soilPsi.toFixed(2) + ' bars';
+    const transLabels = ['', 'Very Low', 'Low', 'Low-Med', 'Medium', 'Medium', 'Med-High', 'High', 'High', 'Very High', 'Maximum'];
+    document.getElementById('transpirationVal').textContent = transLabels[transLevel];
+
+    // Calculate potentials along the gradient
+    const atmPsi = -10 - transLevel * 18;
+    const leafPsi = atmPsi / 6;
+    const rootPsi = soilPsi * 1.5 - 1.5;
+    const xylemPsi = (leafPsi + rootPsi) / 2;
+
+    // Update displays
+    document.getElementById('atmPsiVal').textContent = atmPsi.toFixed(0) + ' bars';
+    document.getElementById('leafPsiVal').textContent = leafPsi.toFixed(0) + ' bars';
+    document.getElementById('xylemPsiVal').textContent = xylemPsi.toFixed(0) + ' bars';
+    document.getElementById('rootPsiVal').textContent = rootPsi.toFixed(0) + ' bars';
+    document.getElementById('soilPsiVal').textContent = soilPsi.toFixed(2) + ' bars';
+
+    // Gradient bars (as % of max magnitude)
+    const maxMag = Math.abs(atmPsi) + 5;
+    document.getElementById('gradAtm').style.width = (Math.abs(atmPsi) / maxMag * 100) + '%';
+    document.getElementById('gradLeaf').style.width = (Math.abs(leafPsi) / maxMag * 100) + '%';
+    document.getElementById('gradXylem').style.width = (Math.abs(xylemPsi) / maxMag * 100) + '%';
+    document.getElementById('gradRoot').style.width = (Math.abs(rootPsi) / maxMag * 100) + '%';
+    document.getElementById('gradSoil').style.width = (Math.abs(soilPsi) / maxMag * 100) + '%';
+
+    treeGradientStrength = Math.abs(rootPsi - leafPsi);
+
+    // Description
+    const desc = document.getElementById('transportDescription');
+    const canAbsorb = soilPsi > rootPsi;
+    if (canAbsorb) {
+        desc.textContent = `Soil \u03A8 (${soilPsi.toFixed(2)}) is higher than root \u03A8 (${rootPsi.toFixed(0)}), so the plant CAN absorb water. ` +
+            `The transpiration pull creates a continuous gradient: soil \u2192 root \u2192 xylem \u2192 leaf \u2192 atmosphere. ` +
+            `Water molecules are pulled upward through cohesion-tension.`;
+    } else {
+        desc.textContent = `WARNING: Soil \u03A8 (${soilPsi.toFixed(2)}) is LOWER than root \u03A8 (${rootPsi.toFixed(0)}). ` +
+            `The plant CANNOT absorb water! Water would actually move from roots back into soil. ` +
+            `The plant will wilt. This can happen during severe drought or high soil salinity.`;
+    }
+}
+
+function drawTreeFrame() {
+    const rect = trCanvas.parentElement.getBoundingClientRect();
+    trCanvas.width = rect.width;
+    trCanvas.height = 440;
+    const W = trCanvas.width;
+    const H = trCanvas.height;
+    trCtx.clearRect(0, 0, W, H);
+
+    const soilPsi = parseFloat(document.getElementById('soilWater').value);
+    const transLevel = parseInt(document.getElementById('transpiration').value);
+
+    // Soil
+    trCtx.fillStyle = '#92400e';
+    trCtx.fillRect(0, H * 0.82, W, H * 0.18);
+
+    // Soil moisture indication
+    const soilAlpha = 0.1 + (1 - Math.abs(soilPsi) / 2) * 0.3;
+    trCtx.fillStyle = `rgba(56, 189, 248, ${Math.max(0, soilAlpha)})`;
+    trCtx.fillRect(0, H * 0.82, W, H * 0.18);
+
+    // Sky
+    trCtx.fillStyle = '#f0f9ff';
+    trCtx.fillRect(0, 0, W, H * 0.15);
+
+    // Trunk
+    const trunkX = W / 2 - 18;
+    const trunkW = 36;
+    trCtx.fillStyle = '#78350f';
+    trCtx.fillRect(trunkX, H * 0.32, trunkW, H * 0.52);
+
+    // Xylem inside trunk
+    trCtx.fillStyle = '#d4a574';
+    trCtx.fillRect(trunkX + 8, H * 0.32, 6, H * 0.52);
+    trCtx.fillRect(trunkX + trunkW - 14, H * 0.32, 6, H * 0.52);
+
+    // Roots
+    trCtx.strokeStyle = '#78350f';
+    trCtx.lineWidth = 6;
+    const rootStartY = H * 0.84;
+    [[- 60, 35], [-30, 45], [30, 45], [60, 35]].forEach(([dx, dy]) => {
+        trCtx.beginPath();
+        trCtx.moveTo(W / 2, rootStartY);
+        trCtx.quadraticCurveTo(W / 2 + dx * 0.5, rootStartY + dy * 0.5, W / 2 + dx, rootStartY + dy);
+        trCtx.stroke();
+    });
+
+    // Canopy
+    const wiltFactor = (treeGradientStrength > 20 && soilPsi < -1.0) ?
+        Math.min((treeGradientStrength - 20) * 0.02 + (Math.abs(soilPsi) - 1.0) * 0.15, 1) : 0;
+
+    const green1 = `rgba(22, 101, 52, ${1 - wiltFactor * 0.5})`;
+    const green2 = `rgba(21, 128, 61, ${1 - wiltFactor * 0.4})`;
+
+    trCtx.fillStyle = green1;
+    trCtx.beginPath();
+    trCtx.ellipse(W / 2, H * 0.22, 95 - wiltFactor * 15, 75 - wiltFactor * 20, 0, 0, Math.PI * 2);
+    trCtx.fill();
+
+    trCtx.fillStyle = green2;
+    trCtx.beginPath();
+    trCtx.ellipse(W / 2 - 50, H * 0.28, 55 - wiltFactor * 10, 45 - wiltFactor * 15, 0, 0, Math.PI * 2);
+    trCtx.fill();
+    trCtx.beginPath();
+    trCtx.ellipse(W / 2 + 50, H * 0.28, 55 - wiltFactor * 10, 45 - wiltFactor * 15, 0, 0, Math.PI * 2);
+    trCtx.fill();
+
+    // Water particles moving up
+    if (Math.random() < treeGradientStrength * 0.025 && soilPsi > -1.8) {
+        treeParticles.push({
+            x: W / 2 - 4 + Math.random() * 8,
+            y: H * 0.82,
+            speed: 0.5 + treeGradientStrength * 0.04
+        });
+    }
+
+    trCtx.fillStyle = '#0ea5e9';
+    for (let i = treeParticles.length - 1; i >= 0; i--) {
+        const p = treeParticles[i];
+        p.y -= p.speed;
+        p.x += Math.sin(p.y * 0.05) * 0.3;
+
+        const alpha = p.y < H * 0.25 ? Math.max(0, (p.y - H * 0.15) / (H * 0.1)) : 1;
+        trCtx.globalAlpha = alpha;
+        trCtx.beginPath();
+        trCtx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        trCtx.fill();
+
+        if (p.y < H * 0.15) {
+            treeParticles.splice(i, 1);
+        }
+    }
+    trCtx.globalAlpha = 1;
+
+    // Transpiration arrows at top of canopy
+    if (transLevel > 3) {
+        trCtx.strokeStyle = 'rgba(14, 165, 233, 0.3)';
+        trCtx.lineWidth = 1.5;
+        const arrowTime = Date.now() * 0.001;
+        for (let a = 0; a < 3; a++) {
+            const ax = W / 2 - 30 + a * 30;
+            const progress = ((arrowTime + a * 1.5) % 3) / 3;
+            trCtx.globalAlpha = Math.sin(progress * Math.PI) * 0.5;
+            const ay = H * 0.1 - progress * 30;
+            trCtx.beginPath();
+            trCtx.moveTo(ax, ay + 15);
+            trCtx.lineTo(ax, ay);
+            trCtx.stroke();
+            trCtx.beginPath();
+            trCtx.moveTo(ax, ay);
+            trCtx.lineTo(ax - 4, ay + 6);
+            trCtx.moveTo(ax, ay);
+            trCtx.lineTo(ax + 4, ay + 6);
+            trCtx.stroke();
+        }
+        trCtx.globalAlpha = 1;
+    }
+
+    // Labels — large, high-contrast colors per region
+    trCtx.textAlign = 'center';
+    trCtx.font = 'bold 16px Inter, sans-serif';
+
+    // Atmosphere — dark blue on light sky
+    trCtx.fillStyle = '#1e3a5f';
+    trCtx.fillText('Atmosphere', W / 2, 18);
+
+    // Transpiration — white with dark outline for visibility on green canopy
+    trCtx.font = 'bold 15px Inter, sans-serif';
+    trCtx.strokeStyle = '#1a3d1a';
+    trCtx.lineWidth = 3;
+    trCtx.strokeText('Transpiration \u2191', W / 2 + 85, H * 0.18);
+    trCtx.fillStyle = '#ffffff';
+    trCtx.fillText('Transpiration \u2191', W / 2 + 85, H * 0.18);
+
+    // Xylem — white with dark outline for visibility on brown trunk
+    trCtx.strokeStyle = '#3b1f0a';
+    trCtx.lineWidth = 3;
+    trCtx.strokeText('Xylem', W / 2 + 40, H * 0.55);
+    trCtx.fillStyle = '#ffffff';
+    trCtx.fillText('Xylem', W / 2 + 40, H * 0.55);
+
+    // Soil water — bright yellow on dark soil
+    trCtx.font = 'bold 16px Inter, sans-serif';
+    trCtx.strokeStyle = '#3b2506';
+    trCtx.lineWidth = 3;
+    trCtx.strokeText('Soil water', W / 2, H * 0.95);
+    trCtx.fillStyle = '#fde68a';
+    trCtx.fillText('Soil water', W / 2, H * 0.95);
+
+    requestAnimationFrame(drawTreeFrame);
+}
+
+// =============================================
+// INITIALIZATION
+// =============================================
+function init() {
+    // Tonicity simulator listeners
+    ['extConc', 'intConc', 'simTemp', 'soluteType'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {});
+    });
+
+    // Calculator listeners
+    ['calcI', 'calcC', 'calcT', 'calcPp'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateCalculator);
+    });
+
+    // Transport listeners
+    document.getElementById('soilWater').addEventListener('input', updateTransport);
+    document.getElementById('transpiration').addEventListener('input', updateTransport);
+
+    // Start simulations
+    updateCalculator();
+    updateTransport();
+    drawTonicityFrame();
+    drawTreeFrame();
+    generateProblem();
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
